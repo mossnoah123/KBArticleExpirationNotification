@@ -5,6 +5,10 @@ The purpose of this script is to automate the task of manually tracking when KB 
 
 The [Teaching and Technology Center](https://www.uwplatt.edu/ttc) (TTC) at UW-Platteville keeps track of which KB Articles they are reponsible for in a Google Sheet. Using this sheet, the TTC was having to manually set reminders of when KB Articles were nearing their expiration date. However, with the power of Google's scripting language, this tedious task is now successfully being automated.
 
+Below is a sample Google Sheet that this script interacts with. It shows the sheet that the TTC uses to keep track of all TTC-owned KB Articles.
+
+![Google Sheet displaying all of the TTC-owned KB Articles](Assets/TTC%20KB%20Article%20Google%20Sheet%20Example.png "This is a sample Google Sheet; the TTC's KB Article Spreadsheet")
+
 ## Background
 
 ### UW KnowledgeBase
