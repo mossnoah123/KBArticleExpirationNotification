@@ -25,8 +25,12 @@ This is a script that I wrote in the Spring of 2018 for the [Teaching and Techno
 My goal with this project was to finally get hands-on with JavaScript, something I had been wanting to do for awhile. I also wanted to learn more about the structure of a JavaScript file and its naming/documentation conventions. On a side note, it was fun approaching this project with an OO-dominant background and using what I know to structure the script well so that it could be easily maintained.
 
 ## Future Plans for this Project
-* Eliminate the need for a Google Sheet altogether and use the [KnowledgeBase API](https://kb.wisc.edu/kbGuide/page.php?id=71945) to determine expiring articles.
-
+* Biggest Goal: Eliminate the need for a Google Sheet altogether and use the [KnowledgeBase API](https://kb.wisc.edu/kbGuide/page.php?id=71945) to determine expiring articles.
+* Develop a UI that is used to interface with a KB Article Google Sheet. This will allow priviliged users to modify the sheet from the UI, bypassing logging into Google every time and possibly breaking the script by directly modifying the sheet.
+* Compensating for modification of the structure of the sheet.
+   - Allowing column names to be added, removed, modified.
+   - Allowing the sheet's name to be modified.
+   - Allowing for gaps between articles.
 
 ## References
 <sup>**1**</sup> - [About the KnowledgeBase](https://kb.wisc.edu/page.php?id=3)
