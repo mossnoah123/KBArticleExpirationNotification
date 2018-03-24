@@ -1,25 +1,24 @@
 // Author: Noah Moss
 // Date Created: 2/26/2018
-// Date Updated: 3/13/2018
+// Date Updated: 3/24/2018
 // Purpose: This script will automatically send the TTC an email whenever it detects that a KB article is about to expire.
 
 // Constants
 var EMAIL_RECIPIENT = "ttc@uwplatt.edu";
 var EMAIL_SUBJECT = "Attn: KB Articles expiring soon";
 var SHEET_COLUMN_RANGE = "A:G";
-var ARTICLE_SHEET_NAME = "KBArticles"
-var START_ARTICLE_ROW = 2;
+var FIRST_ARTICLE_ROW_INDEX = 1;
 var TOTAL_COLUMNS = 7;
 var DAYS_IN_WEEK = 7;
 
 // Article Struct
-var Article = function (id, title, status, owner, expiration, dateChecked, checkedBy) {
+var Article = function (id, title, status, owner, expirationDate, lastCheckedDate, checkedBy) {
     this.id = id;
     this.title = title;
     this.status = status;
     this.owner = owner;
-    this.expiration = expiration;
-    this.dateChecked = dateChecked;
+    this.expirationDate = expirationDate;
+    this.lastCheckedDate = lastCheckedDate;
     this.checkedBy = checkedBy;
 }
 
@@ -37,11 +36,10 @@ Object.freeze(BuildEmailBodyTypes);
  */
 function main() {
     var currentDate = new Date();
-    var kbSheet = getKBArticleSheet();
-    var kbArticlesInSheet = getKBArticlesWithinSheet(kbSheet);
     var emailBody = buildEmailBody(BuildEmailBodyTypes.New, null, currentDate);
-    for each(var kbArticle in kbArticlesInSheet)
-    {
+    var kbSheet = getKBArticleSheet();
+    var kbArticlesWithinSheet = getKBArticlesWithinSheet(kbSheet);
+    for each(var kbArticle in kbArticlesWithinSheet) {
         if (isArticleExpiring(kbArticle, currentDate))
             emailBody += buildEmailBody(BuildEmailBodyTypes.Insert, kbArticle, null);
     }
@@ -55,45 +53,54 @@ function main() {
  * Returns the sheet that the list of KB Articles is on.
  */
 function getKBArticleSheet() {
-    return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ARTICLE_SHEET_NAME);
+    return SpreadsheetApp.getActiveSheet();
 }
 
 /**
- * Gets the data contents of every cell from each KB Article row, constructs a new KB Article
+ * Gets the contents of every cell from each KB Article row, constructs a new KB Article
  * object using those data contents, adds that new object to an array of KB Article objects, 
  * and finally returns the array.
  * 
  * @param {Sheet} sheet - Sheet to get KB Articles from.
  */
 function getKBArticlesWithinSheet(sheet) {
-    var rawKBArticleData = sheet.getRange(SHEET_COLUMN_RANGE).getValues();
+    var rawSheetData = sheet.getRange(SHEET_COLUMN_RANGE).getValues();
+    var lastArticleRowIndex = getIndexOfLastArticleRow(rawSheetData);
     var arrayOfKBArticleObjects = new Array();
-    for (var i = START_ARTICLE_ROW - 1, l = rawKBArticleData.length; i < l; i++) {
-        if (rawKBArticleData[i][0].toString() == "") // ID of record
-            break;
-        else {
-            var article = constructNewKBArticle(rawKBArticleData, i);
-            arrayOfKBArticleObjects.push(article);
-        }
+    for (var i = FIRST_ARTICLE_ROW_INDEX; i <= lastArticleRowIndex; i++) {
+        var article = constructNewKBArticle(rawSheetData, i);
+        arrayOfKBArticleObjects.push(article);
     }
     return arrayOfKBArticleObjects;
 }
 
 /**
+ * Determines the index of the last KB Article row and returns it.
+ * 
+ * @param {Object[][]} rawSheetData - Container holding the contents of every cell from the sheet.
+ */
+function getIndexOfLastArticleRow(rawSheetData){
+    var articleRowIndex = FIRST_ARTICLE_ROW_INDEX;
+    while (!isArticleIDCellEmpty(rawSheetData, articleRowIndex))
+        articleRowIndex++;
+    return articleRowIndex;
+}
+
+/**
  * Constructs and returns a new KB Article object.
  * 
- * @param {Object[][]} kbArticleData - Container holding the raw data of every KB Article.
+ * @param {Object[][]} rawSheetData - Container holding the contents of every cell from the sheet.
  * @param {Integer} rowIndex - Index of the KB Article row to use.
  */
-function constructNewKBArticle(kbArticleData, rowIndex) {
-    var id = kbArticleData[rowIndex][0];
-    var title = kbArticleData[rowIndex][1];
-    var status = kbArticleData[rowIndex][2];
-    var owner = kbArticleData[rowIndex][3];
-    var expiration = kbArticleData[rowIndex][4];
-    var dateChecked = kbArticleData[rowIndex][5];
-    var checkedBy = kbArticleData[rowIndex][6];
-    var kbArticle = new Article(id, title, status, owner, expiration, dateChecked, checkedBy);
+function constructNewKBArticle(rawSheetData, rowIndex) {
+    var id = rawSheetData[rowIndex][0];
+    var title = rawSheetData[rowIndex][1];
+    var status = rawSheetData[rowIndex][2];
+    var owner = rawSheetData[rowIndex][3];
+    var dateExpiration = rawSheetData[rowIndex][4];
+    var dateChecked = rawSheetData[rowIndex][5];
+    var checkedBy = rawSheetData[rowIndex][6];
+    var kbArticle = new Article(id, title, status, owner, dateExpiration, dateChecked, checkedBy);
     return kbArticle;
 }
 
@@ -105,10 +112,8 @@ function constructNewKBArticle(kbArticleData, rowIndex) {
  * @param {Date} currentDate - Today's date.
  */
 function isArticleExpiring(article, currentDate) {
-    var weekFromExpirationDate = getPreviousWeekDate(article.expiration);
-    if (isCurrentDateOneWeekFromExpiring(currentDate, weekFromExpirationDate))
-        return true;
-    return false;
+    var weekFromExpirationDate = getPreviousWeekDate(article.expirationDate);
+    return isCurrentDateOneWeekFromExpiration(currentDate, weekFromExpirationDate)
 }
 
 /**
@@ -117,10 +122,10 @@ function isArticleExpiring(article, currentDate) {
  * @param {Date} date - Date to get the previous week from.
  */
 function getPreviousWeekDate(date) {
-    var weekPriorDate = new Date(date);
-    var dayOfMonth = weekPriorDate.getDate();
-    weekPriorDate.setDate(dayOfMonth - DAYS_IN_WEEK);
-    return weekPriorDate;
+    var previousWeekDate = new Date(date);
+    var dayOfMonth = previousWeekDate.getDate();
+    previousWeekDate.setDate(dayOfMonth - DAYS_IN_WEEK);
+    return previousWeekDate;
 }
 
 /**
@@ -129,10 +134,10 @@ function getPreviousWeekDate(date) {
  * @param {Date} date - Date to get the next week from.
  */
 function getNextWeekDate(date) {
-    var weekNextDate = new Date(date);
-    var dayOfMonth = weekNextDate.getDate();
-    weekNextDate.setDate(dayOfMonth + DAYS_IN_WEEK);
-    return weekNextDate;
+    var nextWeekDate = new Date(date);
+    var dayOfMonth = nextWeekDate.getDate();
+    nextWeekDate.setDate(dayOfMonth + DAYS_IN_WEEK);
+    return nextWeekDate;
 }
 
 /**
@@ -142,12 +147,10 @@ function getNextWeekDate(date) {
  * @param {Date} currentDate - Today's date.
  * @param {Date} weekFromExpirationDate - The date one week prior to an article's expiration date.
  */
-function isCurrentDateOneWeekFromExpiring(currentDate, weekFromExpirationDate) {
+function isCurrentDateOneWeekFromExpiration(currentDate, weekFromExpirationDate) {
     var currentDateString = getDateInStringFormat(currentDate);
     var weekFromExpirationDateString = getDateInStringFormat(weekFromExpirationDate);
-    if (currentDateString == weekFromExpirationDateString)
-        return true;
-    return false;
+    return currentDateString == weekFromExpirationDateString
 }
 
 /**
@@ -169,9 +172,7 @@ function getDateInStringFormat(date) {
  * @param {Date} currentDate - Today's date.
  */
 function articlesWereInsertedIntoEmailBody(emailBody, currentDate) {
-    if (emailBody == newEmailBody(currentDate))
-        return false;
-    return true;
+    return emailBody != newEmailBody(currentDate)
 }
 
 /**
@@ -182,6 +183,16 @@ function articlesWereInsertedIntoEmailBody(emailBody, currentDate) {
  */
 function sendEmail(emailBody) {
     MailApp.sendEmail(EMAIL_RECIPIENT, EMAIL_SUBJECT, emailBody);
+}
+
+/**
+ * Determines whether the ID cell of a KB Article is empty or not.
+ * 
+ * @param {Object[][]} rawSheetData - Container holding the contents of every cell from the sheet.
+ * @param {Integer} rowIndex - Index of the KB Article row to use.
+ */
+function isArticleIDCellEmpty(rawSheetData, rowIndex) {
+    return rawSheetData[rowIndex][0].toString() == "";
 }
 
 /**
