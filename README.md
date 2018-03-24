@@ -29,7 +29,6 @@ My goal with this project was to finally get hands-on with JavaScript, something
 * Develop a UI that is used to interface with a KB Article Google Sheet. This will allow priviliged users to modify the sheet from the UI, bypassing logging into Google every time and possibly breaking the script by directly modifying the sheet.
 * Compensating for modification of the structure of the sheet.
    - Allowing column names to be added, removed, modified.
-   - Allowing the sheet's name to be modified.
    - Allowing for gaps between articles.
 
 ## References
