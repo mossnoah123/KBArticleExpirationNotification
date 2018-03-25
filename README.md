@@ -30,6 +30,8 @@ My goal with this project was to finally get hands-on with JavaScript, something
 * Compensating for modification of the structure of the sheet.
    - Allowing column names to be added, removed, modified.
    - Allowing for gaps between articles.
+* Eliminate using Google's built-in Script Logger and log to an actual file instead.
+   - This may include writing to a Log sheet attached to the KB Article spreadsheet or an external file elsewhere.
 
 ## References
 <sup>**1**</sup> - [About the KnowledgeBase](https://kb.wisc.edu/page.php?id=3)
