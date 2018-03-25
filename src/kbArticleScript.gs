@@ -1,12 +1,13 @@
 // Author: Noah Moss
 // Date Created: 2/26/2018
-// Date Updated: 3/24/2018
+// Date Updated: 3/25/2018
 // Purpose: This script will automatically send the TTC an email whenever it detects that a KB article is about to expire.
 
 // Constants
 var EMAIL_RECIPIENT = "ttc@uwplatt.edu";
 var EMAIL_SUBJECT = "Attn: KB Articles expiring soon";
 var SHEET_COLUMN_RANGE = "A:G";
+var COLUMN_HEADER_ROW_INDEX = 0;
 var FIRST_ARTICLE_ROW_INDEX = 1;
 var TOTAL_COLUMNS = 7;
 var DAYS_IN_WEEK = 7;
@@ -32,13 +33,20 @@ Object.freeze(BuildEmailBodyTypes);
 
 
 /**
- * Runs the main script.
+ * Runs the script.
  */
 function main() {
     var currentDate = new Date();
     var emailBody = buildEmailBody(BuildEmailBodyTypes.New, null, currentDate);
     var kbSheet = getKBArticleSheet();
-    var kbArticlesWithinSheet = getKBArticlesWithinSheet(kbSheet);
+    var kbArticlesWithinSheet;
+    try {
+        kbArticlesWithinSheet = getKBArticlesWithinSheet(kbSheet);
+    }
+    catch(err) {
+        Logger.log("Error: " + err.message + " Terminating the script now.");
+        return;
+    }
     for each(var kbArticle in kbArticlesWithinSheet) {
         if (isArticleExpiring(kbArticle, currentDate))
             emailBody += buildEmailBody(BuildEmailBodyTypes.Insert, kbArticle, null);
@@ -66,6 +74,8 @@ function getKBArticleSheet() {
 function getKBArticlesWithinSheet(sheet) {
     var rawSheetData = sheet.getRange(SHEET_COLUMN_RANGE).getValues();
     var lastArticleRowIndex = getIndexOfLastArticleRow(rawSheetData);
+    if (lastArticleRowIndex == -1)
+        throw new Error("There are no KB Articles in the sheet " + sheet.getName() + "!");
     var arrayOfKBArticleObjects = new Array();
     for (var i = FIRST_ARTICLE_ROW_INDEX; i <= lastArticleRowIndex; i++) {
         var article = constructNewKBArticle(rawSheetData, i);
@@ -76,6 +86,7 @@ function getKBArticlesWithinSheet(sheet) {
 
 /**
  * Determines the index of the last KB Article row and returns it.
+ * If there are no KB Articles in the sheet, -1 is returned.
  * 
  * @param {Object[][]} rawSheetData - Container holding the contents of every cell from the sheet.
  */
@@ -83,7 +94,10 @@ function getIndexOfLastArticleRow(rawSheetData){
     var articleRowIndex = FIRST_ARTICLE_ROW_INDEX;
     while (!isArticleIDCellEmpty(rawSheetData, articleRowIndex))
         articleRowIndex++;
-    return articleRowIndex;
+    if (articleRowIndex == FIRST_ARTICLE_ROW_INDEX)
+        return -1;
+    else
+        return articleRowIndex;
 }
 
 /**
@@ -91,15 +105,19 @@ function getIndexOfLastArticleRow(rawSheetData){
  * 
  * @param {Object[][]} rawSheetData - Container holding the contents of every cell from the sheet.
  * @param {Integer} rowIndex - Index of the KB Article row to use.
- */
+ */ 
 function constructNewKBArticle(rawSheetData, rowIndex) {
-    var id = rawSheetData[rowIndex][0];
-    var title = rawSheetData[rowIndex][1];
-    var status = rawSheetData[rowIndex][2];
-    var owner = rawSheetData[rowIndex][3];
-    var dateExpiration = rawSheetData[rowIndex][4];
-    var dateChecked = rawSheetData[rowIndex][5];
-    var checkedBy = rawSheetData[rowIndex][6];
+    var columnHeaders = new Array();
+    for (var i = 0; i < TOTAL_COLUMNS; i++) {
+        columnHeaders[i] = rawSheetData[COLUMN_HEADER_ROW_INDEX][i];
+    }
+    var id = rawSheetData[rowIndex][columnHeaders.indexOf("ID")];
+    var title = rawSheetData[rowIndex][columnHeaders.indexOf("Article Title")];
+    var status = rawSheetData[rowIndex][columnHeaders.indexOf("Status")];
+    var owner = rawSheetData[rowIndex][columnHeaders.indexOf("Owner")];
+    var dateExpiration = rawSheetData[rowIndex][columnHeaders.indexOf("Expiration")];
+    var dateChecked = rawSheetData[rowIndex][columnHeaders.indexOf("Date Checked")];
+    var checkedBy = rawSheetData[rowIndex][columnHeaders.indexOf("Checked By")];
     var kbArticle = new Article(id, title, status, owner, dateExpiration, dateChecked, checkedBy);
     return kbArticle;
 }
