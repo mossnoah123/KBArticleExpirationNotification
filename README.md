@@ -3,7 +3,7 @@
 ## Summary
 The purpose of this script is to automate the task of manually tracking when KB Articles should be reviewed and pushed for reactivation.
 
-The [Teaching and Technology Center](https://www.uwplatt.edu/ttc) (TTC) at UW-Platteville keeps track of which KB Articles they are reponsible for in a Google Sheet. Using this sheet, the TTC was having to manually set reminders of when KB Articles were nearing their expiration date. However, with the power of Google's scripting language, this tedious task is now successfully being automated.
+The [Teaching and Technology Center](https://www.uwplatt.edu/ttc) (TTC) at UW-Platteville keeps track of which KB Articles they are responsible for in a Google Sheet. Using this sheet, the TTC was having to manually set reminders of when KB Articles were nearing their expiration date. However, with the power of Google's scripting language, this tedious task is now successfully being automated.
 
 Below is a sample Google Sheet that this script interacts with. It shows the sheet that the TTC uses to keep track of all TTC-owned KB Articles.
 
@@ -26,7 +26,7 @@ My goal with this project was to finally get hands-on with JavaScript, something
 
 ## Future Plans for this Project
 * Biggest Goal: Eliminate the need for a Google Sheet altogether and use the [KnowledgeBase API](https://kb.wisc.edu/kbGuide/page.php?id=71945) to determine expiring articles.
-* Develop a UI that is used to interface with a KB Article Google Sheet. This will allow priviliged users to modify the sheet from the UI, bypassing logging into Google every time and possibly breaking the script by directly modifying the sheet.
+* Develop a UI that is used to interface with a KB Article Google Sheet. This will allow privileged users to modify the sheet from the UI, bypassing logging into Google every time and possibly breaking the script by directly modifying the sheet.
 * Compensating for modification of the structure of the sheet.
    - Allowing column names to be added, removed, modified.
    - Allowing for gaps between articles.
