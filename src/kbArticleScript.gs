@@ -1,7 +1,8 @@
 // Author: Noah Moss
 // Date Created: 2/26/2018
-// Date Updated: 3/25/2018
+// Date Updated: 4/7/2018
 // Purpose: This script will automatically send the TTC an email whenever it detects that a KB article is about to expire.
+
 
 // Constants
 var EMAIL_RECIPIENT = "ttc@uwplatt.edu";
@@ -12,7 +13,7 @@ var FIRST_ARTICLE_ROW_INDEX = 1;
 var TOTAL_COLUMNS = 7;
 var DAYS_IN_WEEK = 7;
 
-// Article Struct
+// Article struct
 var Article = function (id, title, status, owner, expirationDate, lastCheckedDate, checkedBy) {
     this.id = id;
     this.title = title;
@@ -23,11 +24,11 @@ var Article = function (id, title, status, owner, expirationDate, lastCheckedDat
     this.checkedBy = checkedBy;
 }
 
-// Email body build Enumerated Type
+// Email Body Build Type enum
 var BuildEmailBodyTypes = {
-    "New":0,
-    "Insert":1,
-    "Conclude":2
+    "NEW":0,
+    "INSERT":1,
+    "CONCLUDE":2
 }
 Object.freeze(BuildEmailBodyTypes);
 
@@ -37,7 +38,7 @@ Object.freeze(BuildEmailBodyTypes);
  */
 function main() {
     var currentDate = new Date();
-    var emailBody = buildEmailBody(BuildEmailBodyTypes.New, null, currentDate);
+    var emailBody = buildEmailBody(BuildEmailBodyTypes.NEW, null, currentDate);
     var kbSheet = getKBArticleSheet();
     var kbArticlesWithinSheet;
     try {
@@ -49,10 +50,10 @@ function main() {
     }
     for each(var kbArticle in kbArticlesWithinSheet) {
         if (isArticleExpiring(kbArticle, currentDate))
-            emailBody += buildEmailBody(BuildEmailBodyTypes.Insert, kbArticle, null);
+            emailBody += buildEmailBody(BuildEmailBodyTypes.INSERT, kbArticle, null);
     }
     if (articlesWereInsertedIntoEmailBody(emailBody, currentDate)) {
-        emailBody += buildEmailBody(BuildEmailBodyTypes.Conclude, null, null);
+        emailBody += buildEmailBody(BuildEmailBodyTypes.CONCLUDE, null, null);
         sendEmail(emailBody);
     }
 }
@@ -223,13 +224,13 @@ function isArticleIDCellEmpty(rawSheetData, rowIndex) {
 function buildEmailBody(buildType, article, currentDate) {
     var emailBody = "";
     switch(buildType) {
-        case BuildEmailBodyTypes.New:
+        case BuildEmailBodyTypes.NEW:
            emailBody = newEmailBody(currentDate);
            break;
-        case BuildEmailBodyTypes.Insert:
+        case BuildEmailBodyTypes.INSERT:
            emailBody = insertArticleIntoEmailBody(article);
            break;
-        case BuildEmailBodyTypes.Conclude:
+        case BuildEmailBodyTypes.CONCLUDE:
            emailBody = concludeEmailBody();
            break;
     }
