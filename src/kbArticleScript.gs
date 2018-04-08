@@ -10,7 +10,6 @@ var EMAIL_SUBJECT = "Attn: KB Articles expiring soon";
 var SHEET_COLUMN_RANGE = "A:G";
 var COLUMN_HEADER_ROW_INDEX = 0;
 var FIRST_ARTICLE_ROW_INDEX = 1;
-var TOTAL_COLUMNS = 7;
 var DAYS_IN_WEEK = 7;
 
 // Article struct
@@ -109,7 +108,8 @@ function getIndexOfLastArticleRow(rawSheetData){
  */ 
 function constructNewKBArticle(rawSheetData, rowIndex) {
     var columnHeaders = new Array();
-    for (var i = 0; i < TOTAL_COLUMNS; i++) {
+    var totalColumns = getTotalNumberOfColumns();
+    for (var i = 0; i < totalColumns; i++) {
         columnHeaders[i] = rawSheetData[COLUMN_HEADER_ROW_INDEX][i];
     }
     var id = rawSheetData[rowIndex][columnHeaders.indexOf("ID")];
@@ -121,6 +121,19 @@ function constructNewKBArticle(rawSheetData, rowIndex) {
     var checkedBy = rawSheetData[rowIndex][columnHeaders.indexOf("Checked By")];
     var kbArticle = new Article(id, title, status, owner, dateExpiration, dateChecked, checkedBy);
     return kbArticle;
+}
+
+/**
+ * Determines the total number of columns in the sheet by using the sheet's column range.
+ */
+function getTotalNumberOfColumns() {
+    var endOfColumnRangeIndex = SHEET_COLUMN_RANGE.length - 1;
+    var firstLetterInColumnRange = SHEET_COLUMN_RANGE.charAt(0);
+    var lastLetterInColumnRange = SHEET_COLUMN_RANGE.charAt(endOfColumnRangeIndex);
+    var firstLetterASCIICode = firstLetterInColumnRange.charCodeAt(0);
+    var lastLetterASCIICode = lastLetterInColumnRange.charCodeAt(0);
+    var distanceBetweenLetterCodes = lastLetterASCIICode - firstLetterASCIICode;
+    return distanceBetweenLetterCodes + 1;
 }
 
 /**
